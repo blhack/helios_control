@@ -9,9 +9,11 @@
 #define max_key 96           //the rightmost midi key ID when transpose is 0
 
 byte channels[max_channels];
-int reds[] = {474};          //red DMX channels
-int greens[] = {1};        //green DMX channels
-int blues[] = {476};         //blue DMX channels
+int reds[] = {10,31,37,46,1,4,7,28,10,16,19};          //red DMX channels
+int greens[] = {11,32,47,49,2,5,8,29,11,17,20};        //green DMX channels
+int blues[] = {12,33,48,50,3,6,9,30,12,18,21};         //blue DMX channels
+
+
 
 bool keys[max_keys];         //an array that stores key states
 bool flashes[num_flashes];   //an array that stores "flash" or "torch" states 
@@ -43,6 +45,10 @@ void setup() {
   MIDI.setHandleNoteOn(handleNoteOn);  // Put only the name of the function
   MIDI.setHandleNoteOff(handleNoteOff);
   MIDI.begin(MIDI_CHANNEL_OMNI);
+  
+  pinMode(9, OUTPUT);
+  
+  debug();
 
 }
 
@@ -117,6 +123,15 @@ float getpitch() {
       oncount++;
     }
   }
+  
+  if (total > 0) {
+    digitalWrite(9, HIGH);  
+  }
+  
+  else {
+    digitalWrite(9, LOW);
+  }
+  
   return(total/oncount);
 }
 
@@ -193,11 +208,33 @@ void all_off() {
   }
 }
 
+void debug() {
+  for (int i=0; i<(sizeof(greens)/sizeof(int)); i++) {
+    DmxSimple.write(greens[i], 255);
+    delay(500);
+    DmxSimple.write(greens[i], 0);
+  }
+}
+
+void snap() {
+  for (int i=0; i<(sizeof(reds)/sizeof(int)); i++) {
+    DmxSimple.write(reds[i], measured_r);
+  }
+  for (int i=0; i<(sizeof(greens)/sizeof(int)); i++) {
+    DmxSimple.write(greens[i], measured_g);
+  }
+  for (int i=0; i<(sizeof(blues)/sizeof(int)); i++) {
+    DmxSimple.write(blues[i], measured_b);
+
+  }
+}
+
 void loop() {
   if (((millis() % 5) == 0)) {
     int pitch = getpitch();
     rgb(pitch);
-    tick();
+    //tick();
+    snap();
   }
   MIDI.read();
 }
